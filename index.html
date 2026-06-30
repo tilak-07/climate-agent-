@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IndraAI – ISRO Climate Intelligence Platform | India</title>
+  <meta name="description" content="AI-powered climate prediction and analysis for the Indian subcontinent, powered by ISRO's MOSDAC, Bhuvan and satellite data sources with real-time forecasting." />
+  <meta name="keywords" content="ISRO climate, India weather AI, MOSDAC, Bhuvan, monsoon prediction, Indian climate agent" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/topojson-client@3.1.0/dist/topojson-client.min.js"></script>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-grid"></div>
+  <div class="floating-orbs">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="header" id="header">
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">
+          <svg viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="20" cy="20" r="18" stroke="url(#lg1)" stroke-width="2"/>
+            <path d="M8 20 Q14 10 20 20 Q26 30 32 20" stroke="url(#lg2)" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+            <circle cx="20" cy="20" r="4" fill="url(#lg1)"/>
+            <defs>
+              <linearGradient id="lg1" x1="0" y1="0" x2="40" y2="40">
+                <stop offset="0%" stop-color="#00d4ff"/>
+                <stop offset="100%" stop-color="#7c3aed"/>
+              </linearGradient>
+              <linearGradient id="lg2" x1="0" y1="0" x2="40" y2="0">
+                <stop offset="0%" stop-color="#00d4ff"/>
+                <stop offset="100%" stop-color="#10b981"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-name">IndraAI</span>
+          <span class="logo-sub">Climate Intelligence</span>
+        </div>
+      </div>
+
+      <nav class="nav" id="nav">
+        <a href="#dashboard" class="nav-link active" id="nav-dashboard">Dashboard</a>
+        <a href="#forecast" class="nav-link" id="nav-forecast">Forecast</a>
+        <a href="#monsoon" class="nav-link" id="nav-monsoon">Monsoon</a>
+        <a href="#analytics" class="nav-link" id="nav-analytics">Analytics</a>
+        <a href="#isro" class="nav-link" id="nav-isro">ISRO Sources</a>
+      </nav>
+
+      <div class="header-actions">
+        <div class="live-badge">
+          <span class="live-dot"></span>
+          <span>LIVE</span>
+        </div>
+        <button class="btn-refresh" id="btn-refresh" title="Refresh Data">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M23 4v6h-6M1 20v-6h6"/>
+            <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+          </svg>
+        </button>
+        <button class="btn-ai-agent" id="btn-agent">
+          <span class="btn-icon">🤖</span>
+          Ask AI Agent
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Banner -->
+  <section class="hero" id="dashboard">
+    <div class="hero-content">
+      <div class="hero-badge">
+        <span class="badge-icon">🛰️</span>
+        Powered by ISRO · MOSDAC · Bhuvan Satellite Data
+      </div>
+      <h1 class="hero-title">
+        India's <span class="gradient-text">AI Climate</span><br/>
+        Prediction Agent
+      </h1>
+      <p class="hero-desc">
+        Real-time climate intelligence for the Indian subcontinent — monsoon tracking, temperature anomalies, rainfall prediction, and extreme weather alerts using ISRO's satellite constellation.
+      </p>
+      <div class="hero-stats">
+        <div class="stat-item">
+          <span class="stat-val" id="stat-cities">36</span>
+          <span class="stat-label">States/UTs Monitored</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-val" id="stat-satellites">12</span>
+          <span class="stat-label">ISRO Satellites Active</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-val" id="stat-accuracy">94.2%</span>
+          <span class="stat-label">Prediction Accuracy</span>
+        </div>
+        <div class="stat-divider"></div>
+        <div class="stat-item">
+          <span class="stat-val" id="stat-uptime">99.7%</span>
+          <span class="stat-label">Platform Uptime</span>
+        </div>
+      </div>
+    </div>
+    <div class="hero-visual">
+      <div class="india-map-container">
+        <canvas id="radarChart" width="340" height="340"></canvas>
+        <div class="map-label">Climate Index Radar</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- India Temperature Map Section -->
+  <section class="india-map-section" id="india-temp-map-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">🛰️ Land Surface Temperature — India</h2>
+        <p class="section-sub">Real-time thermal map powered by Open-Meteo &amp; ISRO MOSDAC satellite data fusion</p>
+      </div>
+
+      <!-- Centered Map -->
+      <div class="india-svg-map-container" id="india-svg-map-container">
+        <div class="map-loading" id="map-loading">
+          <div class="map-spinner"></div>
+          <span>Fetching live temperatures from satellite feeds...</span>
+        </div>
+
+        <!-- Map title overlay (like MODIS style) -->
+        <div class="map-title-overlay">
+          <div class="map-title-text">Average Land Surface Temperature</div>
+          <div class="map-title-sub">India (Real-Time), Open-Meteo Ensemble</div>
+          <!-- Inline legend bar (like reference image) -->
+          <div class="map-inline-legend">
+            <div class="mil-bar"></div>
+            <div class="mil-ticks">
+              <span>10</span><span>15</span><span>20</span><span>25</span><span>30</span><span>35</span><span>40</span>
+            </div>
+            <div class="mil-label">Average Land Surface Temperature (°C)</div>
+          </div>
+        </div>
+
+        <svg id="india-map-svg" viewBox="0 0 800 920" preserveAspectRatio="xMidYMid meet"></svg>
+
+        <!-- Hover Tooltip -->
+        <div class="map-tooltip" id="map-tooltip">
+          <div class="tooltip-city" id="tooltip-city">City</div>
+          <div class="tooltip-temp" id="tooltip-temp">--°C</div>
+          <div class="tooltip-detail" id="tooltip-detail">--</div>
+          <div class="tooltip-hint">Click to load full data →</div>
+        </div>
+
+        <!-- Source credit (like MODIS) -->
+        <div class="map-source-credit">
+          Source: Open-Meteo API · ISRO MOSDAC · Created by IndraAI
+        </div>
+      </div>
+
+      <!-- Bottom Info Panel -->
+      <div class="map-bottom-panel">
+
+        <!-- Legend card -->
+        <div class="mbp-card mbp-legend">
+          <div class="mbp-card-title">🌡️ Temperature Scale</div>
+          <div class="mbp-gradient-bar"></div>
+          <div class="mbp-gradient-ticks">
+            <span>10°C</span><span>20°C</span><span>30°C</span><span>40°C+</span>
+          </div>
+          <div class="mbp-swatches">
+            <div class="mbp-swatch-row"><span class="mbp-dot" style="background:#08306b"></span>Glacial (&lt;10°C)</div>
+            <div class="mbp-swatch-row"><span class="mbp-dot" style="background:#2171b5"></span>Cold (10–18°C)</div>
+            <div class="mbp-swatch-row"><span class="mbp-dot" style="background:#41b6c4"></span>Cool (18–24°C)</div>
+            <div class="mbp-swatch-row"><span class="mbp-dot" style="background:#78c679"></span>Mild (24–28°C)</div>
+            <div class="mbp-swatch-row"><span class="mbp-dot" style="background:#fed976"></span>Warm (28–32°C)</div>
+            <div class="mbp-swatch-row"><span class="mbp-dot" style="background:#fd8d3c"></span>Hot (32–37°C)</div>
+            <div class="mbp-swatch-row"><span class="mbp-dot" style="background:#bd0026"></span>Very Hot (&gt;37°C)</div>
+          </div>
+        </div>
+
+        <!-- Live Stats card -->
+        <div class="mbp-card mbp-stats">
+          <div class="mbp-card-title">📊 Live Statistics</div>
+          <div class="mbp-stat-big">
+            <div class="mbp-stat-item">
+              <div class="mbp-stat-icon">🔥</div>
+              <div class="mbp-stat-label">Hottest</div>
+              <div class="mbp-stat-val" id="map-hottest">—</div>
+            </div>
+            <div class="mbp-stat-item">
+              <div class="mbp-stat-icon">❄️</div>
+              <div class="mbp-stat-label">Coolest</div>
+              <div class="mbp-stat-val" id="map-coolest">—</div>
+            </div>
+            <div class="mbp-stat-item">
+              <div class="mbp-stat-icon">🌡️</div>
+              <div class="mbp-stat-label">Avg Temp</div>
+              <div class="mbp-stat-val" id="map-avg">—</div>
+            </div>
+            <div class="mbp-stat-item">
+              <div class="mbp-stat-icon">📍</div>
+              <div class="mbp-stat-label">Regions</div>
+              <div class="mbp-stat-val" id="map-count">15</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- City temp rankings -->
+        <div class="mbp-card mbp-rankings">
+          <div class="mbp-card-title">🏙️ City Rankings</div>
+          <div class="mbp-rankings-list" id="mbp-rankings-list">
+            <div class="mbp-rank-loading">Loading city data...</div>
+          </div>
+        </div>
+
+        <!-- Data source card -->
+        <div class="mbp-card mbp-source">
+          <div class="mbp-card-title">🛰️ Data Sources</div>
+          <div class="mbp-source-list">
+            <div class="mbp-source-item"><span class="mbp-src-dot cyan"></span>Open-Meteo API</div>
+            <div class="mbp-source-item"><span class="mbp-src-dot violet"></span>ISRO MOSDAC</div>
+            <div class="mbp-source-item"><span class="mbp-src-dot emerald"></span>INSAT-3D/3DR</div>
+            <div class="mbp-source-item"><span class="mbp-src-dot amber"></span>IMD Network</div>
+          </div>
+          <div class="mbp-update-time">
+            🔄 Auto-refresh: 10 min<br>
+            <span id="map-last-update" style="font-size:0.7rem;opacity:0.6;">—</span>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- City Selector -->
+  <section class="city-selector-section">
+    <div class="container">
+      <div class="section-header">
+        <h2 class="section-title">Select Region</h2>
+        <p class="section-sub">Choose an Indian city or region for detailed climate analysis</p>
+      </div>
+      <div class="city-grid" id="cityGrid">
+        <!-- Cities rendered by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Current Weather Dashboard -->
+  <section class="dashboard-section" id="current-weather">
+    <div class="container">
+      <div class="dashboard-header">
+        <div>
+          <h2 class="section-title">Climate Dashboard</h2>
+          <p class="section-sub">Live data for <span id="selected-city-name">New Delhi</span></p>
+        </div>
+        <div class="last-updated">
+          <span>Last updated: </span>
+          <span id="last-updated-time">Loading...</span>
+        </div>
+      </div>
+
+      <!-- Main Weather Cards -->
+      <div class="weather-cards-grid">
+        <div class="weather-card card-primary" id="temp-card">
+          <div class="card-header-row">
+            <span class="card-label">Temperature</span>
+            <span class="card-icon temp-icon">🌡️</span>
+          </div>
+          <div class="card-value-big" id="temp-value">--</div>
+          <div class="card-meta">
+            <span id="temp-feels">Feels like: --</span>
+          </div>
+          <div class="card-trend" id="temp-trend"></div>
+        </div>
+
+        <div class="weather-card card-rain" id="rain-card">
+          <div class="card-header-row">
+            <span class="card-label">Rainfall</span>
+            <span class="card-icon">🌧️</span>
+          </div>
+          <div class="card-value-big" id="rain-value">--</div>
+          <div class="card-meta">
+            <span id="rain-prob">Probability: --</span>
+          </div>
+          <div class="rain-bars" id="rain-bars"></div>
+        </div>
+
+        <div class="weather-card card-humidity" id="humidity-card">
+          <div class="card-header-row">
+            <span class="card-label">Humidity</span>
+            <span class="card-icon">💧</span>
+          </div>
+          <div class="card-value-big" id="humidity-value">--</div>
+          <div class="humidity-ring-container">
+            <svg class="humidity-ring" viewBox="0 0 100 100">
+              <circle class="ring-bg" cx="50" cy="50" r="40" />
+              <circle class="ring-fill" id="humidity-ring-fill" cx="50" cy="50" r="40"
+                stroke-dasharray="251.2" stroke-dashoffset="251.2" />
+            </svg>
+          </div>
+        </div>
+
+        <div class="weather-card card-wind" id="wind-card">
+          <div class="card-header-row">
+            <span class="card-label">Wind Speed</span>
+            <span class="card-icon">🌬️</span>
+          </div>
+          <div class="card-value-big" id="wind-value">--</div>
+          <div class="card-meta">
+            <span id="wind-dir">Direction: --</span>
+          </div>
+          <div class="wind-compass" id="wind-compass">
+            <div class="compass-rose">
+              <span class="compass-n">N</span>
+              <span class="compass-s">S</span>
+              <span class="compass-e">E</span>
+              <span class="compass-w">W</span>
+              <div class="compass-arrow" id="compass-arrow"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="weather-card card-uv" id="uv-card">
+          <div class="card-header-row">
+            <span class="card-label">UV Index</span>
+            <span class="card-icon">☀️</span>
+          </div>
+          <div class="card-value-big" id="uv-value">--</div>
+          <div class="uv-bar-container">
+            <div class="uv-bar">
+              <div class="uv-bar-fill" id="uv-bar-fill"></div>
+              <div class="uv-marker" id="uv-marker"></div>
+            </div>
+            <div class="uv-labels"><span>Low</span><span>Mod</span><span>High</span><span>Ext</span></div>
+          </div>
+        </div>
+
+        <div class="weather-card card-pressure" id="pressure-card">
+          <div class="card-header-row">
+            <span class="card-label">Pressure</span>
+            <span class="card-icon">🔵</span>
+          </div>
+          <div class="card-value-big" id="pressure-value">--</div>
+          <div class="card-meta">
+            <span id="pressure-trend-text">--</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- AI Analysis Card -->
+      <div class="ai-analysis-card" id="ai-analysis-card">
+        <div class="ai-card-header">
+          <div class="ai-avatar">🤖</div>
+          <div>
+            <div class="ai-name">IndraAI Assistant</div>
+            <div class="ai-status">Analyzing satellite data...</div>
+          </div>
+          <div class="ai-typing" id="ai-typing">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+        <div class="ai-text" id="ai-text">
+          Initializing climate analysis for the selected region...
+        </div>
+        <div class="ai-tags" id="ai-tags">
+          <span class="ai-tag">🛰️ MOSDAC</span>
+          <span class="ai-tag">🗺️ Bhuvan</span>
+          <span class="ai-tag">📡 INSAT-3D</span>
+          <span class="ai-tag">🌊 OCEANSAT</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 7-Day Forecast Section -->
+  <section class="forecast-section" id="forecast">
+    <div class="container">
+      <h2 class="section-title">7-Day Climate Forecast</h2>
+      <p class="section-sub">AI-enhanced predictions using ISRO satellite data fusion</p>
+      <div class="forecast-cards" id="forecast-cards">
+        <!-- rendered by JS -->
+      </div>
+    </div>
+  </section>
+
+  <!-- Temperature & Rainfall Charts -->
+  <section class="charts-section" id="analytics">
+    <div class="container">
+      <h2 class="section-title">Climate Analytics</h2>
+      <p class="section-sub">Historical trends and AI-forecasted projections</p>
+      <div class="charts-grid">
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-title">Temperature Trend (°C)</span>
+            <div class="chart-legend">
+              <span class="legend-dot" style="background:#00d4ff"></span><span>Max</span>
+              <span class="legend-dot" style="background:#7c3aed"></span><span>Min</span>
+              <span class="legend-dot" style="background:#f59e0b"></span><span>Avg</span>
+            </div>
+          </div>
+          <canvas id="tempChart" height="200"></canvas>
+        </div>
+
+        <div class="chart-card">
+          <div class="chart-card-header">
+            <span class="chart-title">Rainfall Probability (%)</span>
+            <div class="chart-legend">
+              <span class="legend-dot" style="background:#10b981"></span><span>Probability</span>
+              <span class="legend-dot" style="background:#3b82f6"></span><span>Precipitation (mm)</span>
+            </div>
+          </div>
+          <canvas id="rainChart" height="200"></canvas>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Monsoon Tracker -->
+  <section class="monsoon-section" id="monsoon">
+    <div class="container">
+      <h2 class="section-title">🌧️ Monsoon Intelligence</h2>
+      <p class="section-sub">Real-time monsoon tracking powered by ISRO's INSAT-3D & MEGHA-TROPIQUES satellite data</p>
+
+      <div class="monsoon-grid">
+        <div class="monsoon-status-card">
+          <div class="monsoon-phase" id="monsoon-phase">Southwest Monsoon</div>
+          <div class="monsoon-progress-wrap">
+            <div class="monsoon-label-row">
+              <span>Onset Progress</span>
+              <span id="monsoon-pct">72%</span>
+            </div>
+            <div class="monsoon-bar">
+              <div class="monsoon-fill" id="monsoon-fill" style="width:72%"></div>
+            </div>
+          </div>
+          <div class="monsoon-details-row">
+            <div class="monsoon-detail">
+              <span class="md-label">Current Coverage</span>
+              <span class="md-val" id="monsoon-coverage">Most of India</span>
+            </div>
+            <div class="monsoon-detail">
+              <span class="md-label">Onset Date</span>
+              <span class="md-val">June 1, 2026</span>
+            </div>
+            <div class="monsoon-detail">
+              <span class="md-label">Withdrawal Est.</span>
+              <span class="md-val">Oct 15, 2026</span>
+            </div>
+            <div class="monsoon-detail">
+              <span class="md-label">Season Rainfall</span>
+              <span class="md-val" id="monsoon-rainfall">103% of LPA</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="monsoon-chart-card">
+          <div class="chart-card-header">
+            <span class="chart-title">Monthly Rainfall vs LPA (mm)</span>
+          </div>
+          <canvas id="monsoonChart" height="220"></canvas>
+        </div>
+
+        <div class="monsoon-alerts-card">
+          <div class="chart-card-header">
+            <span class="chart-title">⚠️ Weather Alerts</span>
+          </div>
+          <div id="alerts-list" class="alerts-list">
+            <!-- rendered by JS -->
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ISRO Data Sources Section -->
+  <section class="isro-section" id="isro">
+    <div class="container">
+      <h2 class="section-title">ISRO Data Sources</h2>
+      <p class="section-sub">This platform integrates data from India's premier space agency and its satellite missions</p>
+
+      <div class="isro-grid">
+        <div class="isro-card" id="isrc-mosdac">
+          <div class="isro-logo">🛰️</div>
+          <div class="isro-name">MOSDAC</div>
+          <div class="isro-full">Meteorological & Oceanographic Satellite Data Archival Centre</div>
+          <div class="isro-desc">Primary source for weather, cloud cover, sea surface temperature, rainfall estimation and Automatic Weather Station data across India.</div>
+          <div class="isro-tags">
+            <span class="itag">Rainfall</span>
+            <span class="itag">Cloud Cover</span>
+            <span class="itag">SST</span>
+            <span class="itag">AWS Data</span>
+          </div>
+          <a class="isro-link" href="https://www.mosdac.gov.in" target="_blank" rel="noopener">Visit Portal →</a>
+        </div>
+
+        <div class="isro-card" id="isrc-bhuvan">
+          <div class="isro-logo">🗺️</div>
+          <div class="isro-name">Bhuvan</div>
+          <div class="isro-full">ISRO's National Geospatial Platform</div>
+          <div class="isro-desc">High-resolution satellite imagery, land use/land cover data, disaster management support and environment-specific datasets for India.</div>
+          <div class="isro-tags">
+            <span class="itag">Geospatial</span>
+            <span class="itag">Land Cover</span>
+            <span class="itag">Disaster Mgmt</span>
+            <span class="itag">WMS/KML</span>
+          </div>
+          <a class="isro-link" href="https://bhuvan.nrsc.gov.in" target="_blank" rel="noopener">Visit Portal →</a>
+        </div>
+
+        <div class="isro-card" id="isrc-insat">
+          <div class="isro-logo">📡</div>
+          <div class="isro-name">INSAT-3D/3DR</div>
+          <div class="isro-full">Indian National Satellite System</div>
+          <div class="isro-desc">Geostationary meteorological satellite providing continuous imagery for weather monitoring, cyclone tracking, fog detection and severe weather alerts.</div>
+          <div class="isro-tags">
+            <span class="itag">Cyclone Track</span>
+            <span class="itag">Fog Detection</span>
+            <span class="itag">Storm Alert</span>
+            <span class="itag">Sounder</span>
+          </div>
+          <a class="isro-link" href="https://www.isro.gov.in/INSAT-3D.html" target="_blank" rel="noopener">Learn More →</a>
+        </div>
+
+        <div class="isro-card" id="isrc-oceansat">
+          <div class="isro-logo">🌊</div>
+          <div class="isro-name">OCEANSAT-3</div>
+          <div class="isro-full">Ocean Colour & Sea Surface Studies</div>
+          <div class="isro-desc">Monitors ocean surface winds, chlorophyll, sea surface temperature and ocean color — critical for monsoon prediction and fisheries forecasting.</div>
+          <div class="isro-tags">
+            <span class="itag">Ocean Winds</span>
+            <span class="itag">Chlorophyll</span>
+            <span class="itag">SST</span>
+            <span class="itag">Monsoon Link</span>
+          </div>
+          <a class="isro-link" href="https://www.isro.gov.in" target="_blank" rel="noopener">Learn More →</a>
+        </div>
+
+        <div class="isro-card" id="isrc-resourcesat">
+          <div class="isro-logo">🌱</div>
+          <div class="isro-name">RESOURCESAT-2A</div>
+          <div class="isro-full">Agricultural & Environmental Monitoring</div>
+          <div class="isro-desc">High-resolution multi-spectral imaging for crop health assessment, drought monitoring, vegetation stress and land degradation mapping.</div>
+          <div class="isro-tags">
+            <span class="itag">Crop Health</span>
+            <span class="itag">Drought</span>
+            <span class="itag">Vegetation</span>
+            <span class="itag">LISS-III</span>
+          </div>
+          <a class="isro-link" href="https://www.isro.gov.in" target="_blank" rel="noopener">Learn More →</a>
+        </div>
+
+        <div class="isro-card" id="isrc-cartosat">
+          <div class="isro-logo">🏔️</div>
+          <div class="isro-name">CARTOSAT-3</div>
+          <div class="isro-full">High-Resolution Terrain Mapping</div>
+          <div class="isro-desc">Sub-meter resolution imagery for flood zone mapping, urban heat island studies, glacier monitoring and topographic climate analysis.</div>
+          <div class="isro-tags">
+            <span class="itag">Flood Mapping</span>
+            <span class="itag">Urban Heat</span>
+            <span class="itag">Glaciers</span>
+            <span class="itag">0.25m Res</span>
+          </div>
+          <a class="isro-link" href="https://www.isro.gov.in" target="_blank" rel="noopener">Learn More →</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- AI Chat Modal -->
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal" id="chat-modal">
+      <div class="modal-header">
+        <div class="modal-title">
+          <span>🤖</span>
+          <span>IndraAI Climate Agent</span>
+        </div>
+        <button class="modal-close" id="modal-close">✕</button>
+      </div>
+      <div class="chat-messages" id="chat-messages">
+        <div class="chat-msg bot">
+          <div class="chat-avatar">🤖</div>
+          <div class="chat-bubble">
+            Namaste! I'm IndraAI, your ISRO-powered climate intelligence assistant for India. I can help you with:
+            <ul style="margin-top:8px;padding-left:16px;">
+              <li>Current weather conditions for any Indian city</li>
+              <li>Monsoon predictions and seasonal outlooks</li>
+              <li>Extreme weather alerts and cyclone tracking</li>
+              <li>Climate trend analysis and anomaly detection</li>
+              <li>ISRO satellite data interpretation</li>
+            </ul>
+            What would you like to know?
+          </div>
+        </div>
+      </div>
+      <div class="chat-input-area">
+        <div class="quick-questions">
+          <button class="quick-btn" onclick="sendQuickMessage('What is the monsoon status for 2026?')">Monsoon 2026?</button>
+          <button class="quick-btn" onclick="sendQuickMessage('Which regions have extreme heat alerts?')">Heat Alerts?</button>
+          <button class="quick-btn" onclick="sendQuickMessage('Explain ISRO MOSDAC data sources')">ISRO MOSDAC?</button>
+          <button class="quick-btn" onclick="sendQuickMessage('Rainfall prediction for Kerala this week')">Kerala Rain?</button>
+        </div>
+        <div class="chat-input-row">
+          <input type="text" id="chat-input" class="chat-input" placeholder="Ask about India's climate..." />
+          <button class="chat-send" id="chat-send">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <line x1="22" y1="2" x2="11" y2="13"/>
+              <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <span class="logo-name">IndraAI</span>
+        <span class="footer-desc">AI Climate Intelligence for India</span>
+      </div>
+      <div class="footer-links">
+        <span>Data Sources:</span>
+        <a href="https://www.mosdac.gov.in" target="_blank" rel="noopener">MOSDAC</a>
+        <a href="https://bhuvan.nrsc.gov.in" target="_blank" rel="noopener">Bhuvan</a>
+        <a href="https://www.isro.gov.in" target="_blank" rel="noopener">ISRO</a>
+        <a href="https://imd.gov.in" target="_blank" rel="noopener">IMD</a>
+        <a href="https://open-meteo.com" target="_blank" rel="noopener">Open-Meteo</a>
+      </div>
+      <div class="footer-copy">
+        © 2026 IndraAI · Built with ISRO satellite intelligence · <span style="color:#10b981">🇮🇳 Made for India</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="app.js?v=2.1"></script>
+</body>
+</html>
